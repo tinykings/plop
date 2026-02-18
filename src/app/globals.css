@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-theme="light"] {
+  --background: #EBE9E4;
+  --foreground: #1C1B1A;
+  --card: #F5F3EF;
+  --muted: #A8A6A1;
+  --muted-light: #D6D4CF;
+  --border: #D6D4CF;
+  --accent: #00BFFF;
+  --accent-light: #FFE0CC;
+  --yellow: #FFC000;
+  --red: #FF3B30;
+  --green: #00BFFF;
+  --purple: #9D00FF;
+  
+  /* Calendar specific - warm tones */
+  --calendar-bg: #EBE9E4;
+  --calendar-text: #1C1B1A;
+}
+
+[data-theme="dark"] {
+  --background: #0D0D0D;
+  --foreground: #E6E6E6;
+  --card: #171717;
+  --muted: #666666;
+  --muted-light: #333333;
+  --border: #262626;
+  --accent: #00D4FF;
+  --accent-light: #2A3300;
+  --yellow: #F1FA8C;
+  --red: #FF5555;
+  --green: #00D4FF;
+  --purple: #BD93F9;
+  
+  --calendar-bg: #0D0D0D;
+  --calendar-text: #E6E6E6;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-body), sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  min-height: 100dvh;
+  transition: background 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* Noise Texture */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+[data-theme="dark"] body::before {
+  opacity: 0.05;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--accent);
+  color: var(--background);
+}
+
+@supports (padding: max(0px)) {
+  .safe-bottom {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Hide scrollbars for native app feel on mobile PWA */
+html,
+body {
+  scrollbar-width: none; /* Firefox */
+}
+
+::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
+}
+
+input, textarea, button {
+  font-family: inherit;
+}
+
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+/* Utility Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
