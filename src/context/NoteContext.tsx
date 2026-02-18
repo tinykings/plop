@@ -154,6 +154,16 @@ export function NoteProvider({ children }: { children: React.ReactNode }) {
     await loadNotes();
   }, [loadNotes]);
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshNotes();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [refreshNotes]);
+
   return (
     <NoteContext.Provider
       value={{
