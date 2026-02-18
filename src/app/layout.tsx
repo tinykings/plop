@@ -17,7 +17,7 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
-const basePath = process.env.NODE_ENV === 'production' ? '/juice' : '';
+const basePath = process.env.NODE_ENV === 'production' ? '/plop' : '';
 
 export const metadata: Metadata = {
   title: "plop",

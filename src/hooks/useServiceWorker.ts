@@ -6,7 +6,7 @@ export function useServiceWorker() {
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       // Get basePath for GitHub Pages
-      const basePath = process.env.NODE_ENV === 'production' ? '/juice' : '';
+      const basePath = process.env.NODE_ENV === 'production' ? '/plop' : '';
       
       navigator.serviceWorker
         .register(`${basePath}/sw.js`)
