@@ -1,4 +1,4 @@
-const CACHE_NAME = 'plop-v10';
+const CACHE_NAME = 'plop-v11';
 const STATIC_ASSETS = [
   './',
   './index.html',
