@@ -62,7 +62,7 @@ export default function NoteEditor({ note, onBack, onSave, onDelete }: NoteEdito
     if (!t && !c.trim()) return;
 
     // Use "Untitled" if title is empty
-    const finalTitle = t || 'Untitled';
+    const finalTitle = t || crypto.randomUUID().slice(0, 8);
     titleRef.current = finalTitle;
     if (titleRef.current !== title) setTitle(finalTitle);
 
