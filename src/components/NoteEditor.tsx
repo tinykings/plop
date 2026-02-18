@@ -208,7 +208,6 @@ export default function NoteEditor({ note, onBack, onSave, onDelete }: NoteEdito
           placeholder="Untitled"
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
-          autoFocus={note.sha === ''}
           style={{
             width: '100%',
             fontSize: 26,
