@@ -52,11 +52,11 @@ export function NoteProvider({ children }: { children: React.ReactNode }) {
       setIsLoaded(true);
       return;
     }
+    setIsLoaded(true);
     try {
       const entries = await listNotes(repoSettings);
       for (const e of entries) noteShasRef.current[e.title] = e.sha;
       setNotes(entries);
-      setIsLoaded(true);
 
       const items = entries.map((e) => ({ name: `${e.title}.txt` }));
       const dates = await fetchNoteDates(items, repoSettings);
@@ -71,7 +71,6 @@ export function NoteProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (err) {
       console.error('Failed to load notes:', err);
-      setIsLoaded(true);
     }
   }, [isRepoConfigured, repoSettings]);
 

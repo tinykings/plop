@@ -445,7 +445,7 @@ function NoteListItem({
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, width: '100%' }}>
         <span style={{
-          fontSize: 20,
+          fontSize: 18,
           color: entry.title ? 'var(--foreground)' : 'var(--muted)',
           fontStyle: entry.title ? 'normal' : 'italic',
           flex: 1,
@@ -462,7 +462,7 @@ function NoteListItem({
         </span>
       </div>
       {snippet && (
-        <span style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
+        <span style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
           {snippet}
         </span>
       )}
