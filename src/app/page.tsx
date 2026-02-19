@@ -6,7 +6,7 @@ import { useNotes } from '@/context/NoteContext';
 import { useSettings } from '@/context/SettingsContext';
 import { useServiceWorker } from '@/hooks/useServiceWorker';
 import { Note, NoteEntry } from '@/types/note';
-import { searchNoteContents } from '@/services/githubSync';
+import { searchNoteContents, ContentMatch } from '@/services/githubSync';
 import NoteEditor from '@/components/NoteEditor';
 import SettingsModal from '@/components/SettingsModal';
 
@@ -28,7 +28,7 @@ export default function HomePage() {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [contentMatchTitles, setContentMatchTitles] = useState<Set<string>>(new Set());
+  const [contentMatches, setContentMatches] = useState<ContentMatch[]>([]);
   const [isContentSearching, setIsContentSearching] = useState(false);
   const contentSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -46,15 +46,15 @@ export default function HomePage() {
   useEffect(() => {
     if (contentSearchTimeoutRef.current) clearTimeout(contentSearchTimeoutRef.current);
     if (!searchQuery.trim()) {
-      setContentMatchTitles(new Set());
+      setContentMatches([]);
       setIsContentSearching(false);
       return;
     }
     setIsContentSearching(true);
     contentSearchTimeoutRef.current = setTimeout(async () => {
       try {
-        const titles = await searchNoteContents(searchQuery.trim(), repoSettings);
-        setContentMatchTitles(new Set(titles));
+        const matches = await searchNoteContents(searchQuery.trim(), repoSettings);
+        setContentMatches(matches);
       } catch {
         // Silently ignore (e.g. rate limit) — title search still works
       } finally {
@@ -66,17 +66,22 @@ export default function HomePage() {
     };
   }, [searchQuery, repoSettings]);
 
-  const filteredNotes = useMemo(() => {
-    if (!searchQuery.trim()) return notes;
+  const { titleMatches, contentOnlyMatches } = useMemo(() => {
+    if (!searchQuery.trim()) return { titleMatches: notes, contentOnlyMatches: [] };
     const q = searchQuery.toLowerCase();
     const titleMatches = notes.filter((n) => n.title.toLowerCase().includes(q));
     const titleMatchSet = new Set(titleMatches.map((n) => n.title));
-    // Append content-only matches after title matches
-    const contentOnlyMatches = notes.filter(
-      (n) => contentMatchTitles.has(n.title) && !titleMatchSet.has(n.title)
-    );
-    return [...titleMatches, ...contentOnlyMatches];
-  }, [notes, searchQuery, contentMatchTitles]);
+    const contentOnlyMatches = contentMatches
+      .filter((m) => !titleMatchSet.has(m.title))
+      .map((m) => {
+        const note = notes.find((n) => n.title === m.title);
+        return { ...note!, snippet: m.snippet };
+      })
+      .filter((n): n is NoteEntry & { snippet: string } => !!n);
+    return { titleMatches, contentOnlyMatches };
+  }, [notes, searchQuery, contentMatches]);
+
+  const filteredNotes = [...titleMatches, ...contentOnlyMatches];
 
   const handleOpenNote = useCallback(async (entry: NoteEntry) => {
     if (isOpening) return;
@@ -301,14 +306,32 @@ export default function HomePage() {
         {/* Notes list */}
         {isRepoConfigured && isLoaded && filteredNotes.length > 0 && (
           <div style={{ borderTop: '2px solid var(--border)' }}>
-            {filteredNotes.map((entry, index) => (
+            {titleMatches.map((entry, index) => (
               <NoteListItem
                 key={entry.title}
                 entry={entry}
                 index={index}
                 onClick={() => handleOpenNote(entry)}
+                isTitleMatch
               />
             ))}
+            {contentOnlyMatches.length > 0 && (
+              <>
+                <div style={{ padding: '12px 0 8px', fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>
+                  In contents
+                </div>
+                {contentOnlyMatches.map((item, index) => (
+                  <NoteListItem
+                    key={item.title}
+                    entry={item}
+                    index={titleMatches.length + index}
+                    onClick={() => handleOpenNote(item)}
+                    isTitleMatch={false}
+                    snippet={item.snippet}
+                  />
+                ))}
+              </>
+            )}
           </div>
         )}
       </main>
@@ -390,19 +413,24 @@ function NoteListItem({
   entry,
   index,
   onClick,
+  isTitleMatch = true,
+  snippet,
 }: {
   entry: NoteEntry;
   index: number;
   onClick: () => void;
+  isTitleMatch?: boolean;
+  snippet?: string;
 }) {
   return (
     <button
       onClick={onClick}
       style={{
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 16,
+        flexDirection: 'column',
+        gap: snippet ? 4 : 0,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
         padding: '16px 0',
         background: 'transparent',
         border: 'none',
@@ -415,21 +443,29 @@ function NoteListItem({
         animationDelay: `${index * 30}ms`,
       }}
     >
-      <span style={{
-        fontSize: 18,
-        color: entry.title ? 'var(--foreground)' : 'var(--muted)',
-        fontStyle: entry.title ? 'normal' : 'italic',
-        flex: 1,
-        minWidth: 0,
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-      }}>
-        {entry.title || 'Untitled'}
-      </span>
-      <span style={{ fontSize: 13, color: 'var(--muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-        {formatNoteDate(entry.updatedAt)}
-      </span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, width: '100%' }}>
+        <span style={{
+          fontSize: 18,
+          color: entry.title ? 'var(--foreground)' : 'var(--muted)',
+          fontStyle: entry.title ? 'normal' : 'italic',
+          flex: 1,
+          minWidth: 0,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontWeight: isTitleMatch ? 500 : 400,
+        }}>
+          {entry.title || 'Untitled'}
+        </span>
+        <span style={{ fontSize: 13, color: 'var(--muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+          {formatNoteDate(entry.updatedAt)}
+        </span>
+      </div>
+      {snippet && (
+        <span style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
+          {snippet}
+        </span>
+      )}
     </button>
   );
 }

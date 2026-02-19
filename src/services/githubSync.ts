@@ -189,19 +189,60 @@ export async function renameNoteFile(
 
 // ── Content search via GitHub code search API ─────────────────────────────
 
+export interface ContentMatch {
+  title: string;
+  snippet: string;
+}
+
 export async function searchNoteContents(
   query: string,
   settings: RepoSettings
-): Promise<string[]> {
-  // Returns titles (filenames without .txt) of notes whose content matches
+): Promise<ContentMatch[]> {
   const data = await apiRequest<{ items: Array<{ name: string }> }>(
     `/search/code?q=${encodeURIComponent(query)}+repo:${settings.owner}/${settings.repo}+extension:txt+in:file`,
     'GET',
     settings.token
   );
-  return data.items
+
+  const titles = data.items
     .filter((item) => item.name.endsWith('.txt'))
     .map((item) => item.name.slice(0, -4));
+
+  if (titles.length === 0) return [];
+
+  const snippetMap: Record<string, string> = {};
+  const wordPattern = new RegExp(`\\b${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+
+  await Promise.all(
+    titles.slice(0, 10).map(async (title) => {
+      try {
+        const { content } = await loadNoteFile(title, settings);
+        const match = wordPattern.exec(content);
+        if (match) {
+          const idx = match.index;
+          const start = Math.max(0, idx - 30);
+          const end = Math.min(content.length, idx + query.length + 30);
+          let snippet = content.slice(start, end);
+          if (start > 0) snippet = '...' + snippet;
+          if (end < content.length) snippet = snippet + '...';
+          snippetMap[title] = snippet;
+        } else {
+          snippetMap[title] = '';
+        }
+      } catch {
+        snippetMap[title] = '';
+      }
+    })
+  );
+
+  const results = titles
+    .map((title) => ({
+      title,
+      snippet: snippetMap[title] || '',
+    }))
+    .filter((r) => r.snippet);
+
+  return results;
 }
 
 // ── Connection test ───────────────────────────────────────────────────────
