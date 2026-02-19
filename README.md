@@ -1,7 +1,3 @@
-<p align="center">
-<img src="public/icon-192.png" alt="Plop Logo" width="120" />
-</p>
-
 <h1 align="center">plop</h1>
 
 <h3 align="center">A minimal note-taking PWA backed by GitHub.</h3>
