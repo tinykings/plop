@@ -306,11 +306,10 @@ export default function HomePage() {
         {/* Notes list */}
         {isRepoConfigured && isLoaded && filteredNotes.length > 0 && (
           <div style={{ borderTop: '2px solid var(--border)' }}>
-            {titleMatches.map((entry, index) => (
+            {titleMatches.map((entry) => (
               <NoteListItem
                 key={entry.title}
                 entry={entry}
-                index={index}
                 onClick={() => handleOpenNote(entry)}
                 isTitleMatch
               />
@@ -320,11 +319,10 @@ export default function HomePage() {
                 <div style={{ padding: '12px 0 8px', fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid var(--border)' }}>
                   In contents
                 </div>
-                {contentOnlyMatches.map((item, index) => (
+                {contentOnlyMatches.map((item) => (
                   <NoteListItem
                     key={item.title}
                     entry={item}
-                    index={titleMatches.length + index}
                     onClick={() => handleOpenNote(item)}
                     isTitleMatch={false}
                     snippet={item.snippet}
@@ -411,13 +409,11 @@ export default function HomePage() {
 
 function NoteListItem({
   entry,
-  index,
   onClick,
   isTitleMatch = true,
   snippet,
 }: {
   entry: NoteEntry;
-  index: number;
   onClick: () => void;
   isTitleMatch?: boolean;
   snippet?: string;
@@ -438,9 +434,6 @@ function NoteListItem({
         width: '100%',
         textAlign: 'left',
         cursor: 'pointer',
-        animation: 'fadeIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards',
-        opacity: 0,
-        animationDelay: `${index * 30}ms`,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, width: '100%' }}>

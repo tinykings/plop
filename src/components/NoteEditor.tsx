@@ -234,7 +234,7 @@ export default function NoteEditor({ note, onBack, onSave, onDelete }: NoteEdito
             style={{
               width: '100%',
               height: '100%',
-              fontSize: 16,
+              fontSize: 18,
               lineHeight: 1.7,
               background: 'transparent',
               border: 'none',
