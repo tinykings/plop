@@ -93,11 +93,21 @@ export async function listNotes(settings: RepoSettings): Promise<NoteEntry[]> {
 
   if (txtFiles.length === 0) return [];
 
-  // Fetch last-commit date for each file in parallel
-  const entries = await Promise.all(
-    txtFiles.map(async (file): Promise<NoteEntry> => {
-      const title = file.name.slice(0, -4); // strip .txt
-      let updatedAt = new Date(0).toISOString();
+  return txtFiles.map((file) => ({
+    title: file.name.slice(0, -4),
+    sha: file.sha,
+    updatedAt: new Date(0).toISOString(),
+  }));
+}
+
+export async function fetchNoteDates(
+  files: { name: string }[],
+  settings: RepoSettings
+): Promise<Record<string, string>> {
+  const dateMap: Record<string, string> = {};
+  await Promise.all(
+    files.map(async (file) => {
+      const title = file.name.slice(0, -4);
       try {
         const commits = await apiRequest<GithubCommit[]>(
           `/repos/${settings.owner}/${settings.repo}/commits?path=${encodeURIComponent(file.name)}&per_page=1`,
@@ -105,18 +115,14 @@ export async function listNotes(settings: RepoSettings): Promise<NoteEntry[]> {
           settings.token
         );
         if (commits.length > 0) {
-          updatedAt = commits[0].commit.committer.date;
+          dateMap[title] = commits[0].commit.committer.date;
         }
       } catch {
-        // Use epoch as fallback so the note still appears
+        dateMap[title] = new Date().toISOString();
       }
-      return { title, sha: file.sha, updatedAt };
     })
   );
-
-  return entries.sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  );
+  return dateMap;
 }
 
 // ── Load a single note's content ──────────────────────────────────────────

@@ -12,6 +12,7 @@ import { NoteEntry, Note } from '@/types/note';
 import { useSettings } from '@/context/SettingsContext';
 import {
   listNotes,
+  fetchNoteDates,
   loadNoteFile,
   saveNoteFile,
   deleteNoteFile,
@@ -53,12 +54,23 @@ export function NoteProvider({ children }: { children: React.ReactNode }) {
     }
     try {
       const entries = await listNotes(repoSettings);
-      // Cache SHAs
       for (const e of entries) noteShasRef.current[e.title] = e.sha;
       setNotes(entries);
+      setIsLoaded(true);
+
+      const items = entries.map((e) => ({ name: `${e.title}.txt` }));
+      const dates = await fetchNoteDates(items, repoSettings);
+      setNotes((prev) => {
+        const updated = prev.map((n) => ({
+          ...n,
+          updatedAt: dates[n.title] || n.updatedAt,
+        }));
+        return updated.sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+      });
     } catch (err) {
       console.error('Failed to load notes:', err);
-    } finally {
       setIsLoaded(true);
     }
   }, [isRepoConfigured, repoSettings]);
@@ -149,10 +161,16 @@ export function NoteProvider({ children }: { children: React.ReactNode }) {
   );
 
   const refreshNotes = useCallback(async () => {
-    setIsLoaded(false);
-    noteShasRef.current = {};
-    await loadNotes();
-  }, [loadNotes]);
+    if (!isRepoConfigured) return;
+    const entries = await listNotes(repoSettings);
+    for (const e of entries) noteShasRef.current[e.title] = e.sha;
+    const items = entries.map((e) => ({ name: `${e.title}.txt` }));
+    const dates = await fetchNoteDates(items, repoSettings);
+    const sorted = entries
+      .map((n) => ({ ...n, updatedAt: dates[n.title] || n.updatedAt }))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    setNotes(sorted);
+  }, [isRepoConfigured, repoSettings]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
