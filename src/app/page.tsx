@@ -445,7 +445,7 @@ function NoteListItem({
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, width: '100%' }}>
         <span style={{
-          fontSize: 18,
+          fontSize: 20,
           color: entry.title ? 'var(--foreground)' : 'var(--muted)',
           fontStyle: entry.title ? 'normal' : 'italic',
           flex: 1,
